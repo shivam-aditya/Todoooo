@@ -10,7 +10,9 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
+    let defaults = UserDefaults.standard
     var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
+    let dbKey = "ToDoListArray"
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -18,6 +20,10 @@ class TodoListViewController: UITableViewController {
         //tableView.register(UINib(nibName: "ToDoItemCell", bundle: nil), forCellReuseIdentifier: "toDoItemCell")
         
         //configureTableView()
+        
+        if let itemsList = defaults.array(forKey: dbKey) as? [String] {
+            itemArray = itemsList
+        }
     }
     
     func configureTableView () {
@@ -85,6 +91,7 @@ class TodoListViewController: UITableViewController {
                 print("Success. text is \(String(describing: itemToAdd))")
                 
                 self.itemArray.append(itemToAdd)
+                self.defaults.set(self.itemArray, forKey: self.dbKey)
                 
                 //self.configureTableView()
                 self.tableView.reloadData()
@@ -96,7 +103,6 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
-        
     }
     
 }
