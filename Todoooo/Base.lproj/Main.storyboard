@@ -32,7 +32,14 @@
                             <outlet property="delegate" destination="RF2-QG-CF2" id="oDb-Yr-Env"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Todoooo" id="bV9-02-riA"/>
+                    <navigationItem key="navigationItem" title="Todoooo" id="bV9-02-riA">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="Lhu-Es-QHB">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            <connections>
+                                <action selector="AddButtonPressed:" destination="RF2-QG-CF2" id="VMx-f0-oj0"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="QA5-NU-rGl" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

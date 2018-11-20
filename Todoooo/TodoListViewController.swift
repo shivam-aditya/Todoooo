@@ -10,12 +10,19 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    let itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
+    var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         //tableView.register(UINib(nibName: "ToDoItemCell", bundle: nil), forCellReuseIdentifier: "toDoItemCell")
+        
+        //configureTableView()
+    }
+    
+    func configureTableView () {
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 120.0
     }
     
     //MARK - Tableview Datasource Methods
@@ -59,5 +66,38 @@ class TodoListViewController: UITableViewController {
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
+    
+    //MARK - Add new items
+    
+    @IBAction func AddButtonPressed(_ sender: UIBarButtonItem) {
+        //var itemAddTextField = UITextField()
+
+        let alert = UIAlertController(title: "Add new Todoooo item", message: "", preferredStyle: .alert)
+        
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Create new item"
+            //itemAddTextField = alertTextField
+        }
+        
+        let action = UIAlertAction(title: "Add Item", style: .default) { (action) in
+            //things to do once user adds the item
+            if let itemToAdd = alert.textFields?[0].text {
+                print("Success. text is \(String(describing: itemToAdd))")
+                
+                self.itemArray.append(itemToAdd)
+                
+                //self.configureTableView()
+                self.tableView.reloadData()
+            }
+            
+            //print(itemAddTextField.text)
+        }
+        
+        alert.addAction(action)
+        
+        present(alert, animated: true, completion: nil)
+        
+    }
+    
 }
 
