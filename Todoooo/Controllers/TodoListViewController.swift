@@ -10,10 +10,11 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    let defaults = UserDefaults.standard
-    var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
+    let userDefaults = UserDefaults.standard
+//    var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
+    var itemArray = [Item]()
     let dbKey = "ToDoListArray"
-    
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -21,9 +22,29 @@ class TodoListViewController: UITableViewController {
         
         //configureTableView()
         
-        if let itemsList = defaults.array(forKey: dbKey) as? [String] {
-            itemArray = itemsList
-        }
+        let item1 = Item()
+        item1.title = "Find chotu"
+        item1.done = true
+        itemArray.append(item1)
+        
+        let item2 = Item()
+        item2.title = "Kill Boss"
+        item2.done = false
+        itemArray.append(item2)
+        
+        let item3 = Item()
+        item3.title = "Buy butcher knife for killing boss"
+        item3.done = true
+        itemArray.append(item3)
+        
+        let item4 = Item()
+        item4.title = "Torture him"
+        item4.done = false
+        itemArray.append(item4)
+        
+//        if let itemsList = userDefaults.array(forKey: dbKey) as? [String] {
+//            itemArray = itemsList
+//        }
     }
     
     func configureTableView () {
@@ -36,8 +57,10 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "toDoItemCell", for: indexPath) //as! CustomListCell
         
+        let item = itemArray[indexPath.row]
         //cell.messageBody.text = itemArray[indexPath.row]
-        cell.textLabel?.text = itemArray[indexPath.row]
+        cell.textLabel?.text = item.title
+        cell.accessoryType = item.done == true ? .checkmark : .none
         
         return cell
     }
@@ -53,24 +76,33 @@ class TodoListViewController: UITableViewController {
     //MARK - TableView Delegate Methods
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("Tapped item is \(itemArray[indexPath.row])")
+        print("Tapped item is \(itemArray[indexPath.row].title)")
         
-        let cell = tableView.cellForRow(at: indexPath)
+        itemArray[indexPath.row].done = !itemArray[indexPath.row].done
         
-        if let accessoryType = cell?.accessoryType {
-            if(accessoryType != .none){
-                cell?.accessoryType = .none
-            }
-            else{
-                cell?.accessoryType = .checkmark
-            }
-        }
-        else{
-            //not used
-            cell?.accessoryType = .checkmark
-        }
-        
+        tableView.reloadData()
+
         tableView.deselectRow(at: indexPath, animated: true)
+        
+        
+//        let selectedItem = itemArray[indexPath.row]
+//        let cell = tableView.cellForRow(at: indexPath)
+        
+//        if let accessoryType = cell?.accessoryType {
+//            if(accessoryType != .none){
+//                cell?.accessoryType = .none
+//                selectedItem.done = false
+//            }
+//            else{
+//                cell?.accessoryType = .checkmark
+//                selectedItem.done = true
+//            }
+//        }
+//        else{
+//            //not used
+//            cell?.accessoryType = .checkmark
+//            selectedItem.done = true
+//        }
     }
     
     //MARK - Add new items
@@ -90,8 +122,12 @@ class TodoListViewController: UITableViewController {
             if let itemToAdd = alert.textFields?[0].text {
                 print("Success. text is \(String(describing: itemToAdd))")
                 
-                self.itemArray.append(itemToAdd)
-                self.defaults.set(self.itemArray, forKey: self.dbKey)
+                //self.itemArray.append(itemToAdd)
+                let newItem = Item();
+                newItem.title = itemToAdd
+                self.itemArray.append(newItem)
+                
+                self.userDefaults.set(self.itemArray, forKey: self.dbKey)
                 
                 //self.configureTableView()
                 self.tableView.reloadData()
