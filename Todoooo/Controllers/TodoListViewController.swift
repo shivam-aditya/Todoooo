@@ -10,41 +10,43 @@ import UIKit
 
 class TodoListViewController: UITableViewController {
 
-    let userDefaults = UserDefaults.standard
+//    let userDefaults = UserDefaults.standard
 //    var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
     var itemArray = [Item]()
     let dbKey = "ToDoListArray"
-    
+    let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         //tableView.register(UINib(nibName: "ToDoItemCell", bundle: nil), forCellReuseIdentifier: "toDoItemCell")
-        
         //configureTableView()
         
-        let item1 = Item()
-        item1.title = "Find chotu"
-        item1.done = true
-        itemArray.append(item1)
+//        let item1 = Item()
+//        item1.title = "Find chotu"
+//        item1.done = true
+//        itemArray.append(item1)
+//
+//        let item2 = Item()
+//        item2.title = "Kill Boss"
+//        item2.done = false
+//        itemArray.append(item2)
+//
+//        let item3 = Item()
+//        item3.title = "Buy butcher knife for killing boss"
+//        item3.done = true
+//        itemArray.append(item3)
+//
+//        let item4 = Item()
+//        item4.title = "Torture him"
+//        item4.done = false
+//        itemArray.append(item4)
         
-        let item2 = Item()
-        item2.title = "Kill Boss"
-        item2.done = false
-        itemArray.append(item2)
+//        if let itemsList = userDefaults.array(forKey: dbKey) as? [Item] {
+//            itemArray = itemsList
+//        }
         
-        let item3 = Item()
-        item3.title = "Buy butcher knife for killing boss"
-        item3.done = true
-        itemArray.append(item3)
-        
-        let item4 = Item()
-        item4.title = "Torture him"
-        item4.done = false
-        itemArray.append(item4)
-        
-        if let itemsList = userDefaults.array(forKey: dbKey) as? [Item] {
-            itemArray = itemsList
-        }
+        loadItemsFromFile()
     }
     
     func configureTableView () {
@@ -84,6 +86,7 @@ class TodoListViewController: UITableViewController {
 
         tableView.deselectRow(at: indexPath, animated: true)
         
+        self.saveItemsToFile()
         
 //        let selectedItem = itemArray[indexPath.row]
 //        let cell = tableView.cellForRow(at: indexPath)
@@ -127,7 +130,7 @@ class TodoListViewController: UITableViewController {
                 newItem.title = itemToAdd
                 self.itemArray.append(newItem)
                 
-                self.userDefaults.set(self.itemArray, forKey: self.dbKey)
+                self.saveItemsToFile()
                 
                 //self.configureTableView()
                 self.tableView.reloadData()
@@ -139,6 +142,33 @@ class TodoListViewController: UITableViewController {
         alert.addAction(action)
         
         present(alert, animated: true, completion: nil)
+    }
+    
+    //MARK - Utility functions
+    
+    func saveItemsToFile() {
+        //self.userDefaults.set(self.itemArray, forKey: self.dbKey)
+        let encoder = PropertyListEncoder()
+        
+        do{
+            let itemArrayEncodedData = try encoder.encode(itemArray)
+            try itemArrayEncodedData.write(to: dataFilePath!)
+        }
+        catch{
+            print("Error in saveItemsToFile in encoding item array is \(error)")
+        }
+    }
+    
+    func loadItemsFromFile(){
+        do {
+            if let dataFromFile = try? Data(contentsOf: dataFilePath!){
+                let decoder = PropertyListDecoder()
+                
+                itemArray = try decoder.decode([Item].self, from: dataFromFile)
+            }
+        } catch {
+            print("Error in loadItemsFromFile in decoding item array is \(error)")
+        }
     }
     
 }
