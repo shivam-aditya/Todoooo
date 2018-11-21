@@ -14,7 +14,7 @@ class TodoListViewController: UITableViewController {
 //    var itemArray = ["Find chotu", "Kill Boss", "Buy butcher knife for killing boss", "Torture him"]
     var itemArray = [Item]()
     let dbKey = "ToDoListArray"
-        
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -42,9 +42,9 @@ class TodoListViewController: UITableViewController {
         item4.done = false
         itemArray.append(item4)
         
-//        if let itemsList = userDefaults.array(forKey: dbKey) as? [String] {
-//            itemArray = itemsList
-//        }
+        if let itemsList = userDefaults.array(forKey: dbKey) as? [Item] {
+            itemArray = itemsList
+        }
     }
     
     func configureTableView () {
@@ -60,7 +60,7 @@ class TodoListViewController: UITableViewController {
         let item = itemArray[indexPath.row]
         //cell.messageBody.text = itemArray[indexPath.row]
         cell.textLabel?.text = item.title
-        cell.accessoryType = item.done == true ? .checkmark : .none
+        cell.accessoryType = item.done ? .checkmark : .none
         
         return cell
     }
