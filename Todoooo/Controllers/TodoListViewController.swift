@@ -19,12 +19,19 @@ class TodoListViewController: UITableViewController {
     let viewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     @IBOutlet weak var searchBar: UISearchBar!
     
+    var selectedCategory : Category? {
+        didSet{
+            loadItems()
+        }
+    }
+
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
         searchBar.delegate = self
-        loadItems()
+        //loadItems()
 
         //tableView.register(UINib(nibName: "ToDoItemCell", bundle: nil), forCellReuseIdentifier: "toDoItemCell")
         //configureTableView()
@@ -118,6 +125,7 @@ class TodoListViewController: UITableViewController {
                 //let newItem = Item()
                 let newItem = Item(context: self.viewContext)
                 newItem.title = itemToAdd
+                newItem.parentCategory = self.selectedCategory
                 self.itemArray.append(newItem)
                 
                 self.saveItems()
@@ -174,10 +182,25 @@ class TodoListViewController: UITableViewController {
     }
     
     func loadItemsFromCoreData(){
-        //let request : NSFetchRequest<Item> = Item.fetchRequest()
         if let itemsResponse = fetchDataFromDbByRequest() {
             itemArray = itemsResponse
+            
+            tableView.reloadData()
         }
+        
+//        if let selectedCategoryName = selectedCategory?.name {
+//            let request : NSFetchRequest<Item> = Item.fetchRequest()
+//
+//            request.predicate = NSPredicate(format: "parentCategory.name CONTAINS[cd] %@", selectedCategoryName)
+//            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+//            request.sortDescriptors = [sortDescriptor]
+//
+//            if let itemsResponse = fetchDataFromDbByRequest(with: request) {
+//                itemArray = itemsResponse
+//            }
+//
+//            tableView.reloadData()
+//        }
     }
     
     func loadItemsFromFile(){
@@ -192,10 +215,36 @@ class TodoListViewController: UITableViewController {
 //        }
     }
     
-    func fetchDataFromDbByRequest(with request: NSFetchRequest<Item> = Item.fetchRequest()) -> [Item]? {
+//    func fetchDataFromDbByRequest(with request: NSFetchRequest<Item> = Item.fetchRequest()) -> [Item]? {
+//        do {
+//            let itemsResponse = try viewContext.fetch(request)
+//            return itemsResponse
+//        } catch {
+//            print("Error in fetchDataFromDbByRequest in decoding item array is \(error)")
+//        }
+//
+//        return nil
+//    }
+    
+    func fetchDataFromDbByRequest(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil) -> [Item]? {
         do {
-            let itemsResponse = try viewContext.fetch(request)
-            return itemsResponse
+            if let selectedCategoryName = selectedCategory?.name {
+                let categoryPredicate = NSPredicate(format: "parentCategory.name CONTAINS[cd] %@", selectedCategoryName)
+
+                if let additionalPredicate = predicate {
+                    let compoundPredicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+                    request.predicate = compoundPredicate
+                }
+                else{
+                    request.predicate = categoryPredicate
+                }
+                
+                let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
+                request.sortDescriptors = [sortDescriptor]
+                
+                let itemsResponse = try viewContext.fetch(request)
+                return itemsResponse
+            }
         } catch {
             print("Error in fetchDataFromDbByRequest in decoding item array is \(error)")
         }
@@ -211,13 +260,11 @@ extension TodoListViewController: UISearchBarDelegate{
         print("Search Bar text is\(String(describing: searchBar.text))")
 
         if let searchText = searchBar.text {
-            let request : NSFetchRequest<Item> = Item.fetchRequest()
-            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchText)
-            
-            let sortDescriptor = NSSortDescriptor(key: "title", ascending: true)
-            request.sortDescriptors = [sortDescriptor]
-            
-            if let itemsResponse = fetchDataFromDbByRequest(with: request) {
+//            let request : NSFetchRequest<Item> = Item.fetchRequest()
+//            request.predicate = NSPredicate(format: "title CONTAINS[cd] %@ AND parentCategory.name CONTAINS[cd] %@", searchText, selectedCategoryName)
+            let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchText)
+
+            if let itemsResponse = fetchDataFromDbByRequest(predicate: predicate) {
                 print(itemsResponse)
                 
                 itemArray = itemsResponse
