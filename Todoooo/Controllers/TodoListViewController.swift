@@ -104,7 +104,7 @@ class TodoListViewController: UITableViewController {
         let alert = UIAlertController(title: "Add new Todoooo item", message: "", preferredStyle: .alert)
         
         alert.addTextField { (alertTextField) in
-            alertTextField.placeholder = "Create new item"
+            alertTextField.placeholder = "Item name"
             //itemAddTextField = alertTextField
         }
         
@@ -162,7 +162,7 @@ class TodoListViewController: UITableViewController {
             try viewContext.save()
         }
         catch{
-            print("Error in saveItemsToFile in encoding item array is \(error)")
+            print("Error in saveItemsToCoreData in encoding item array is \(error)")
         }
         
         tableView.reloadData()
@@ -197,7 +197,7 @@ class TodoListViewController: UITableViewController {
             let itemsResponse = try viewContext.fetch(request)
             return itemsResponse
         } catch {
-            print("Error in loadItemsFromFile in decoding item array is \(error)")
+            print("Error in fetchDataFromDbByRequest in decoding item array is \(error)")
         }
         
         return nil
