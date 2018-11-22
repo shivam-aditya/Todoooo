@@ -20,6 +20,9 @@ class CategoryViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
+        categoryTableView.delegate = self
+        categoryTableView.dataSource = self
+        
         loadData()
     }
     
@@ -34,7 +37,7 @@ class CategoryViewController: UIViewController {
         
         let action = UIAlertAction(title: "Add category", style: .default) { (alertAction) in
             if let categoryToAddString = alert.textFields?[0].text {
-                print("cateogry added is is \(String(describing: categoryToAddString))")
+                print("category added is is \(String(describing: categoryToAddString))")
                 
                 let categoryToAdd = Category(context: self.persistentContainerViewContext)
             
