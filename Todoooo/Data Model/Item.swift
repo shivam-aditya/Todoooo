@@ -6,9 +6,9 @@
 //  Copyright © 2018 Shivam Aditya. All rights reserved.
 //
 
-class Item : Encodable, Decodable {
-    
-    var title : String = ""
-    var done : Bool = false
-    
-}
+//class Item : Encodable, Decodable {
+//    
+//    var title : String = ""
+//    var done : Bool = false
+//    
+//}
