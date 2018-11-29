@@ -8,8 +8,9 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
 
     var todoItems : Results<Item>?
     let realm = try! Realm()
@@ -27,6 +28,25 @@ class TodoListViewController: UITableViewController {
         // Do any additional setup after loading the view, typically from a nib.
         
         searchBar.delegate = self
+        tableView.separatorStyle = .none
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        guard let colorHex = selectedCategory?.backgroundColor else {
+            fatalError("selected category background color is null")
+        }
+        
+        title = selectedCategory?.name
+        
+        updateNavBar(withHexCode: colorHex)
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        guard UIColor(hexString: "#1D9BF6") != nil else {
+            fatalError("original color is null")
+        }
+        
+        updateNavBar(withHexCode: "#1D9BF6")
     }
     
     func configureTableView () {
@@ -34,14 +54,38 @@ class TodoListViewController: UITableViewController {
         tableView.estimatedRowHeight = 120.0
     }
     
+    //MARK: - Nav Bar Methods
+    
+    func updateNavBar(withHexCode colorHexCode:String){
+        guard let navBar = navigationController?.navigationBar else {
+            fatalError("navigation controller does not exist")
+        }
+        
+        guard let navBarColor = UIColor.init(hexString: colorHexCode) else {
+            fatalError("navigation controller does not exist")
+        }
+        
+        searchBar.barTintColor = navBarColor
+        navBar.barTintColor = navBarColor
+        navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+        navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor : ContrastColorOf(navBarColor, returnFlat: true)]
+    }
+    
     //MARK - Tableview Datasource Methods
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "toDoItemCell", for: indexPath) //as! CustomListCell
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
+            
+            
+            let backgroundBaseColor = (selectedCategory!.backgroundColor != "") ? UIColor.init(hexString: selectedCategory!.backgroundColor) : RandomFlatColor()
+            if let color = backgroundBaseColor?.darken(byPercentage: CGFloat(indexPath.row) / CGFloat(todoItems!.count)) {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
         }
         else{
             cell.textLabel?.text = "No items added"
@@ -65,9 +109,6 @@ class TodoListViewController: UITableViewController {
             do{
                 try realm.write {
                     item.done = !item.done
-                    
-                    // REMOVING DATA FROM REALM
-                    //realm.delete(item)
                 }
             }
             catch{
@@ -75,7 +116,6 @@ class TodoListViewController: UITableViewController {
             }
         }
         
-
         tableView.reloadData()
     }
     
@@ -156,11 +196,23 @@ class TodoListViewController: UITableViewController {
         }
     }
     
-
-    
     func fetchDataFromDbByRequest() -> Results<Item>? {
         todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         return todoItems
+    }
+    
+    override func deleteCell(at indexPath: IndexPath) {
+        // REMOVING DATA FROM REALM
+        if let item = todoItems?[indexPath.row]{
+            do{
+                try realm.write {
+                    realm.delete(item)
+                }
+            }
+            catch{
+                print("Error in didSelectRowAt in changing item done state to realm is \(error)")
+            }
+        }
     }
 }
 

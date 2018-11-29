@@ -8,28 +8,26 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryViewController: UIViewController {
-    
-    @IBOutlet weak var categoryTableView: UITableView!
+class CategoryViewController: SwipeTableViewController {
     
     var categoryArray : Results<Category>?
-    let categoryTableCellIdentifier = "CategoryCell"
+    let categoryTableCellIdentifier = "Cell"
     
     let realm = try! Realm()
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        categoryTableView.delegate = self
-        categoryTableView.dataSource = self
         
         loadData()
+        
+        tableView.separatorStyle = .none
     }
     
     //MARK: - Add new categories
 
-    @IBAction func addButtonpressed(_ sender: UIBarButtonItem) {
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         let alert = UIAlertController(title: "Add new Category", message: "", preferredStyle: .alert)
         
         alert.addTextField { (alertTextField) in
@@ -43,10 +41,11 @@ class CategoryViewController: UIViewController {
                 let categoryToAdd = Category()
             
                 categoryToAdd.name = categoryToAddString
+                categoryToAdd.backgroundColor = UIColor.randomFlat.hexValue()
                 //self.categoryArray.append(categoryToAdd)
                 
                 self.saveData(item: categoryToAdd)
-                self.categoryTableView.reloadData()
+                self.tableView.reloadData()
             }
         }
         
@@ -56,32 +55,60 @@ class CategoryViewController: UIViewController {
     }
     
     
+    //MARK: - Delete data from swipe
+    
+    override func deleteCell(at indexPath: IndexPath) {
+        //handle action by updating model with deletion
+        if let category = self.categoryArray?[indexPath.row]{
+            do{
+                try self.realm.write {
+                    // REMOVING DATA FROM REALM
+                    self.realm.delete(category)
+                }
+            }
+            catch{
+                print("Error in deleting category data from realm. Error is \(error)")
+            }
+        }
+    }
 }
 
-extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
+extension CategoryViewController {
     
     //MARK: - TableView DataSource Methods
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = categoryTableView.dequeueReusableCell(withIdentifier: categoryTableCellIdentifier, for: indexPath)
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        let categoryItem = categoryArray?[indexPath.row]
-        cell.textLabel?.text = categoryItem?.name ?? "No categories added"
+        if let categoryItem = categoryArray?[indexPath.row]{
+            cell.textLabel?.text = categoryItem.name
+            
+            guard let cellBackgroundColor = (categoryItem.backgroundColor != "" ? UIColor(hexString: categoryItem.backgroundColor) : UIColor.randomFlat) else{
+                fatalError("cellBackgroundColor is null")
+            }
+            
+            cell.backgroundColor = cellBackgroundColor
+            cell.textLabel?.textColor = ContrastColorOf(cellBackgroundColor, returnFlat: true)
+        }
+        else{
+            cell.textLabel?.text = "No categories added"
+            cell.backgroundColor = UIColor.randomFlat
+        }
         
         return cell
     }
     
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categoryArray?.count ?? 1
     }
     
-    func numberOfSections(in tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         return 1
     }
     
     //MARK: - TableView Delegate Methods
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //print the category name that was tapped
         print("Category tapped is: \(String(describing: categoryArray?[indexPath.row].name))")
         performSegue(withIdentifier: "goToItems", sender: self)
@@ -91,7 +118,7 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
         if(segue.identifier == "goToItems"){
             let destinationVC = segue.destination as! TodoListViewController
             
-            if let indexPath = categoryTableView.indexPathForSelectedRow {
+            if let indexPath = tableView.indexPathForSelectedRow {
                 destinationVC.selectedCategory = categoryArray?[indexPath.row]
             }
         }
@@ -130,6 +157,6 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
             print("Error in saveItemsToCoreData in encoding item array is \(error)")
         }
         
-        categoryTableView.reloadData()
+        tableView.reloadData()
     }
 }
