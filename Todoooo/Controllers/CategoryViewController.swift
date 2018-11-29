@@ -7,15 +7,16 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UIViewController {
     
     @IBOutlet weak var categoryTableView: UITableView!
     
-    var categoryArray = [Category]()
-    let persistentContainerViewContext = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var categoryArray : Results<Category>?
     let categoryTableCellIdentifier = "CategoryCell"
+    
+    let realm = try! Realm()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -39,12 +40,12 @@ class CategoryViewController: UIViewController {
             if let categoryToAddString = alert.textFields?[0].text {
                 print("category added is is \(String(describing: categoryToAddString))")
                 
-                let categoryToAdd = Category(context: self.persistentContainerViewContext)
+                let categoryToAdd = Category()
             
                 categoryToAdd.name = categoryToAddString
-                self.categoryArray.append(categoryToAdd)
+                //self.categoryArray.append(categoryToAdd)
                 
-                self.saveData()
+                self.saveData(item: categoryToAdd)
                 self.categoryTableView.reloadData()
             }
         }
@@ -64,14 +65,14 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = categoryTableView.dequeueReusableCell(withIdentifier: categoryTableCellIdentifier, for: indexPath)
         
-        let categoryItem = categoryArray[indexPath.row]
-        cell.textLabel?.text = categoryItem.name
+        let categoryItem = categoryArray?[indexPath.row]
+        cell.textLabel?.text = categoryItem?.name ?? "No categories added"
         
         return cell
     }
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        return categoryArray?.count ?? 1
     }
     
     func numberOfSections(in tableView: UITableView) -> Int {
@@ -82,7 +83,7 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //print the category name that was tapped
-        print("Category tapped is: \(String(describing: categoryArray[indexPath.row].name))")
+        print("Category tapped is: \(String(describing: categoryArray?[indexPath.row].name))")
         performSegue(withIdentifier: "goToItems", sender: self)
     }
     
@@ -91,7 +92,7 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
             let destinationVC = segue.destination as! TodoListViewController
             
             if let indexPath = categoryTableView.indexPathForSelectedRow {
-                destinationVC.selectedCategory = categoryArray[indexPath.row]
+                destinationVC.selectedCategory = categoryArray?[indexPath.row]
             }
         }
     }
@@ -101,33 +102,29 @@ extension CategoryViewController : UITableViewDataSource, UITableViewDelegate {
     
     //save and load data
     func loadData(){
-        loadItemsFromCoreData()
+        loadItemsFromRealm()
     }
     
-    func loadItemsFromCoreData(){
-        if let categoryItemsResponse = fetchDataFromDbByRequest() {
+    func loadItemsFromRealm(){
+        if let categoryItemsResponse = fetchAllDataFromRealm() {
             categoryArray = categoryItemsResponse
         }
     }
     
-    func fetchDataFromDbByRequest(with request: NSFetchRequest<Category> = Category.fetchRequest()) -> [Category]? {
-        do {
-            let itemsResponse = try persistentContainerViewContext.fetch(request)
-            return itemsResponse
-        } catch {
-            print("Error in fetchDataFromDbByRequest in decoding item array is \(error)")
-        }
-        
-        return nil
+    func fetchAllDataFromRealm() -> Results<Category>? {
+        let itemsResponse = realm.objects(Category.self)
+        return itemsResponse
     }
     
-    func saveData(){
-        saveItemsToCoreData()
+    func saveData(item itemToBeSaved: Category){
+        saveItemToRealm(item: itemToBeSaved)
     }
     
-    func saveItemsToCoreData() {
+    func saveItemToRealm(item: Category) {
         do {
-            try persistentContainerViewContext.save()
+            try realm.write {
+                realm.add(item)
+            }
         }
         catch{
             print("Error in saveItemsToCoreData in encoding item array is \(error)")
